@@ -1,4 +1,6 @@
-node_modules/
+(course_roadmap.md is a markdown file, which is a source/config file, so no need to add to .gitignore)
+
+(empty - output nothing)node_modules/
 .next/
 dist/
 build/
