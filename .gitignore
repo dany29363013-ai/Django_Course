@@ -3,3 +3,4 @@ Nothing needs to be added to .gitignore since only an HTML file was added, which
 dist/
 build/
 *.log
+node_modules/
