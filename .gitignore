@@ -1,8 +1,5 @@
-(course_roadmap.md is a markdown file, which is a source/config file, so no need to add to .gitignore)
-
-(empty - output nothing)node_modules/
+Nothing needs to be added to .gitignore since only an HTML file was added, which is a source file that should be tracked in version control.node_modules/
 .next/
 dist/
 build/
 *.log
-node_modules/
