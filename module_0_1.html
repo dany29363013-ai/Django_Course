@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 0.1: How the Web Actually Works | Django Mastery Course</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <style>
+        :root {
+            /* Color Palette - Dark Brown Theme */
+            --bg-primary: #1a1210;
+            --bg-secondary: #2d1f1a;
+            --bg-tertiary: #3d2a22;
+            --text-primary: #f5e6d3;
+            --text-secondary: #c9a88c;
+            --text-muted: #8b7355;
+            --accent-gold: #d4a574;
+            --accent-peru: #cd853f;
+            --accent-copper: #b87333;
+            --success: #6b8c42;
+            --success-bg: rgba(107, 140, 66, 0.15);
+            --error: #c94848;
+            --error-bg: rgba(201, 72, 72, 0.15);
+            --info: #4a90a4;
+            --info-bg: rgba(74, 144, 164, 0.15);
+            --warning: #cd853f;
+            --warning-bg: rgba(205, 133, 63, 0.15);
+            --border-color: #4a3728;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-primary);
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; margin-top: 2.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        h3 { font-size: 1.5rem; margin-top: 2rem; color: var(--accent-gold); }
+        h4 { font-size: 1.2rem; margin-top: 1.5rem; }
+
+        p { margin-bottom: 1.2rem; }
+
+        a {
+            color: var(--accent-peru);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent-gold);
+            text-decoration: underline;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-tertiary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--accent-gold);
+        }
+
+        pre {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: 0.9rem;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-copper);
+            color: var(--text-primary);
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.3rem;
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.6rem 0.8rem;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            background-color: var(--accent-copper);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .progress-container {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .progress-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-copper), var(--accent-gold));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2rem 3rem;
+            max-width: 1200px;
+        }
+
+        /* Module Header */
+        .module-header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .module-meta {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--accent-gold);
+        }
+
+        .learning-objectives {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .learning-objectives h4 {
+            margin-bottom: 1rem;
+            color: var(--accent-gold);
+        }
+
+        .learning-objectives ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .learning-objectives li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .learning-objectives li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-peru);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .callout-key {
+            background-color: var(--info-bg);
+            border-left-color: var(--info);
+        }
+
+        .callout-warning {
+            background-color: var(--warning-bg);
+            border-left-color: var(--warning);
+        }
+
+        .callout-mistake {
+            background-color: var(--error-bg);
+            border-left-color: var(--error);
+        }
+
+        .callout-real {
+            background-color: var(--success-bg);
+            border-left-color: var(--success);
+        }
+
+        .callout-anime {
+            background-color: rgba(212, 165, 116, 0.15);
+            border-left-color: var(--accent-gold);
+        }
+
+        .callout-hood {
+            background-color: var(--bg-tertiary);
+            border-left-color: var(--text-muted);
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .callout-key .callout-title { color: var(--info); }
+        .callout-warning .callout-title { color: var(--warning); }
+        .callout-mistake .callout-title { color: var(--error); }
+        .callout-real .callout-title { color: var(--success); }
+        .callout-anime .callout-title { color: var(--accent-gold); }
+        .callout-hood .callout-title { color: var(--text-muted); }
+
+        /* Diagrams */
+        .diagram-container {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .diagram-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Exercise Section */
+        .exercise-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .exercise-section h2 {
+            margin-top: 0;
+            color: var(--accent-gold);
+        }
+
+        .exercise-type {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .exercise-warmup { background-color: var(--info-bg); color: var(--info); }
+        .exercise-build { background-color: var(--success-bg); color: var(--success); }
+        .exercise-debug { background-color: var(--error-bg); color: var(--error); }
+        .exercise-challenge { background-color: var(--warning-bg); color: var(--warning); }
+        .exercise-explain { background-color: var(--bg-tertiary); color: var(--accent-gold); }
+
+        .exercise-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .exercise-card h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        /* Collapsible Solution */
+        .solution-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--accent-gold);
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .solution-toggle:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .solution-toggle svg {
+            transition: transform 0.3s ease;
+        }
+
+        .solution-toggle.active svg {
+            transform: rotate(180deg);
+        }
+
+        .solution-content {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .solution-content.visible {
+            display: block;
+        }
+
+        /* Module Footer */
+        .module-footer {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .footer-card {
+            background-color: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .footer-card h4 {
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .footer-card ul {
+            list-style: none;
+        }
+
+        .footer-card li {
+            padding: 0.4rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-card li::before {
+            content: "✓ ";
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .next-module-preview {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-peru);
+        }
+
+        .next-module-preview h4 {
+            color: var(--accent-peru);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Check-in */
+        .checkin-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--info-bg);
+            border-radius: 8px;
+            border: 1px solid var(--info);
+        }
+
+        .checkin-section h4 {
+            color: var(--info);
+            margin-bottom: 1rem;
+        }
+
+        /* Mobile Responsive */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1100;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.6rem; }
+            
+            .module-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Checkbox styling */
+        .section-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background-color: var(--bg-primary);
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .section-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-gold);
+            cursor: pointer;
+        }
+
+        .section-checkbox label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: var(--bg-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+    </button>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>🍌 Django Mastery</h3>
+                <p>Banana man's Journey to Backend Excellence</p>
+            </div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Module 0.1 Sections</div>
+                    <ul class="nav-list">
+                        <li class="nav-item"><a class="nav-link active" onclick="scrollToSection('intro')">Introduction</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('http-anatomy')">HTTP Anatomy</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('client-server')">Client-Server Model</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('rest-api')">REST & APIs</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('json-serialization')">JSON & Serialization</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('request-lifecycle')">Request Lifecycle</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('exercises')">Exercises</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="scrollToSection('recap')">Recap & Next Steps</a></li>
+                    </ul>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>Progress</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Module Header -->
+            <header class="module-header">
+                <h1>Module 0.1: How the Web Actually Works</h1>
+                <p style="color: var(--text-muted); margin-top: 0.5rem;">Before you can master Django, you must understand the ground it stands on.</p>
+                
+                <div class="module-meta">
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        <span>Phase 0: Foundations</span>
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                        <span>~2 hours study time</span>
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
+                        <span>Prerequisites: Basic Python knowledge</span>
+                    </div>
+                </div>
+
+                <div class="learning-objectives">
+                    <h4>🎯 Learning Objectives</h4>
+                    <ul>
+                        <li>Understand the complete anatomy of an HTTP request and response</li>
+                        <li>Explain the client-server model and stateless protocols</li>
+                        <li>Distinguish between REST and non-REST APIs</li>
+                        <li>Understand JSON serialization and why APIs exist</li>
+                        <li>Trace what happens from typing a URL to seeing a response</li>
+                    </ul>
+                </div>
+            </header>
+
+            <!-- Introduction -->
+            <section id="intro">
+                <h2>Introduction: Why This Matters</h2>
+                
+                <p>Banana man, before we write a single line of Django code, we need to talk about <strong>what Django actually does</strong>. Think of it like this:</p>
+
+                <div class="callout callout-anime">
+                    <div class="callout-title">📺 Anime Analogy: World Trigger Trigger System</div>
+                    <p>In <em>World Trigger</em>, fighters use Triggers—devices that channel their energy into specific abilities. But to use a Trigger effectively, you first need to understand <strong>how Trion energy flows</strong>, how the trigger system works, and what happens when you activate it.</p>
+                    <p><strong>Django is your Trigger</strong>. But if you don't understand HTTP (the Trion energy flowing through it), you'll be like Osamu trying to fight without knowing his own power source. You might get lucky once, but you won't last in real production battles.</p>
+                </div>
+
+                <p>Every time you build an API endpoint in Django, you're responding to an HTTP request. Every database query, every authentication check, every JSON response—it all rides on top of HTTP. Get this foundation wrong, and you'll spend months debugging issues you don't understand.</p>
+
+                <p>By the end of this module, you'll be able to look at any web request and mentally trace its entire journey. That's the kind of intuition that separates tutorial-followers from real backend engineers.</p>
+            </section>
+
+            <!-- HTTP Anatomy -->
+            <section id="http-anatomy">
+                <h2>HTTP Request/Response Anatomy</h2>
+
+                <p><strong>HTTP (HyperText Transfer Protocol)</strong> is the language clients and servers use to talk to each other. It's text-based, human-readable (mostly), and brutally simple once you strip away the complexity.</p>
+
+                <h3>The HTTP Request</h3>
+                <p>Every HTTP request has four main parts:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>What It Is</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Method</code></td>
+                            <td>The action you want to perform</td>
+                            <td><code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>URL / Path</code></td>
+                            <td>The resource you're targeting</td>
+                            <td><code>/api/v1/loans/</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Headers</code></td>
+                            <td>Metadata about the request</td>
+                            <td><code>Content-Type: application/json</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>Body</code></td>
+                            <td>Optional data you're sending</td>
+                            <td><code>{"amount": 50000, "term_months": 12}</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="callout callout-key">
+                    <div class="callout-title">💡 Key Idea: Methods Have Semantics</div>
+                    <p>HTTP methods aren't just random verbs—they have specific meanings:</p>
+                    <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                        <li><strong>GET</strong>: Retrieve data (should not modify anything)</li>
+                        <li><strong>POST</strong>: Create new resource or trigger an action</li>
+                        <li><strong>PUT</strong>: Replace an entire resource</li>
+                        <li><strong>PATCH</strong>: Partially update a resource</li>
+                        <li><strong>DELETE</strong>: Remove a resource</li>
+                    </ul>
+                    <p style="margin-top: 0.5rem;"><strong>Why this matters:</strong> If you use POST when you should use PUT, you break caching, you confuse other developers, and you violate REST principles. Django REST Framework enforces these semantics in its generic views.</p>
+                </div>
+
+                <h3>Real Request Example</h3>
+                <p>Here's what an actual HTTP request looks like when sent to create a loan:</p>
+
+<pre><code class="language-http">POST /api/v1/loans/ HTTP/1.1
+Host: fintech-api.example.com
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Accept: application/json
+User-Agent: Mozilla/5.0
+
+{
+    "borrower_id": 12345,
+    "product_type": "personal",
+    "amount": 500000,
+    "term_months": 24,
+    "purpose": "business_expansion"
+}</code></pre>
+
+                <p>Let's break this down:</p>
+                <ul>
+                    <li><code>POST /api/v1/loans/ HTTP/1.1</code> — The <strong>request line</strong>: method, path, protocol version</li>
+                    <li><code>Host</code> — Which server we're talking to (important for virtual hosting)</li>
+                    <li><code>Content-Type</code> — Tells the server "I'm sending JSON"</li>
+                    <li><code>Authorization</code> — JWT token proving who I am</li>
+                    <li><code>Accept</code> — "I want JSON back, please"</li>
+                    <li><code>User-Agent</code> — What client software I'm using</li>
+                    <li><strong>Blank line</strong> — Separates headers from body</li>
+                    <li><strong>Body</strong> — The actual loan data</li>
+                </ul>
+
+                <h3>The HTTP Response</h3>
+                <p>The server responds with three main parts:</p>
+
+<pre><code class="language-http">HTTP/1.1 201 Created
+Date: Mon, 15 Jan 2024 14:32:10 GMT
+Content-Type: application/json
+Content-Length: 256
+Location: /api/v1/loans/67890/
+X-Request-ID: req_abc123xyz
+
+{
+    "id": 67890,
+    "borrower_id": 12345,
+    "status": "pending_approval",
+    "amount": 500000,
+    "created_at": "2024-01-15T14:32:10Z",
+    "interest_rate": 0.18
+}</code></pre>
+
+                <div class="callout callout-hood">
+                    <div class="callout-title">⚙️ Under the Hood: Status Codes Matter</div>
+                    <p>The status code (<code>201 Created</code>) tells the client what happened. Common codes you'll see in DRF:</p>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><code>200 OK</code> — Success (usually for GET/PATCH)</li>
+                        <li><code>201 Created</code> — Resource created (POST)</li>
+                        <li><code>204 No Content</code> — Success but no body (DELETE)</li>
+                        <li><code>400 Bad Request</code> — Client sent invalid data</li>
+                        <li><code>401 Unauthorized</code> — Not authenticated</li>
+                        <li><code>403 Forbidden</code> — Authenticated but no permission</li>
+                        <li><code>404 Not Found</code> — Resource doesn't exist</li>
+                        <li><code>429 Too Many Requests</code> — Rate limited</li>
+                        <li><code>500 Internal Server Error</code> — Server crashed (your bug)</li>
+                    </ul>
+                    <p style="margin-top: 0.5rem;"><strong>DRF automatically returns the right status codes</strong> if you use its generic views correctly. But if you write custom views, <em>you</em> are responsible.</p>
+                </div>
+
+                <h3>Query Strings vs Body</h3>
+                <p>Sometimes data goes in the URL as a <strong>query string</strong>:</p>
+                <pre><code>GET /api/v1/loans/?status=pending&amount_gte=100000&page=2</code></pre>
+
+                <p><strong>When to use query strings:</strong></p>
+                <ul>
+                    <li>Filtering, searching, sorting, pagination</li>
+                    <li>Data that doesn't change server state</li>
+                    <li>Bookmarks and shareable URLs</li>
+                </ul>
+
+                <p><strong>When to use the body:</strong></p>
+                <ul>
+                    <li>Creating or updating resources</li>
+                    <li>Large amounts of data</li>
+                    <li>Sensitive data (though still use HTTPS!)</li>
+                </ul>
+
+                <div class="callout callout-mistake">
+                    <div class="callout-title">❌ Common Mistake: PUT vs PATCH Confusion</div>
+                    <p>I've seen senior devs do this. Don't be them.</p>
+                    <p><strong>PUT</strong> = Replace the <em>entire</em> resource. If you omit a field, it becomes null/default.</p>
+                    <p><strong>PATCH</strong> = Update <em>only</em> the fields you send.</p>
+                    <p><strong>Example:</strong> If a loan has <code>{amount: 500k, status: "pending", rate: 0.18}</code> and you send:</p>
+                    <pre><code>PATCH /api/v1/loans/67890/ {"status": "approved"}</code></pre>
+                    <p>Only <code>status</code> changes. With PUT, you'd need to send all three fields or risk losing data.</p>
+                </div>
+            </section>
+
+            <!-- Client-Server Model -->
+            <section id="client-server">
+                <h2>Client-Server Model & Stateless Protocols</h2>
+
+                <p>The web runs on a <strong>client-server architecture</strong>:</p>
+
+                <div class="diagram-container">
+                    <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Client Box -->
+                        <rect x="50" y="100" width="200" height="100" rx="10" fill="#3d2a22" stroke="#d4a574" stroke-width="2"/>
+                        <text x="150" y="140" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="16" font-weight="600">Client</text>
+                        <text x="150" y="165" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="12">Browser / Mobile App</text>
+                        <text x="150" y="185" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="12">Postman / curl</text>
+                        
+                        <!-- Arrow Right -->
+                        <line x1="250" y1="150" x2="350" y2="150" stroke="#cd853f" stroke-width="3" marker-end="url(#arrowhead)"/>
+                        <text x="300" y="135" text-anchor="middle" fill="#cd853f" font-family="Inter" font-size="11">HTTP Request</text>
+                        <text x="300" y="175" text-anchor="middle" fill="#8b7355" font-family="Inter" font-size="10">"Create loan"</text>
+                        
+                        <!-- Server Box -->
+                        <rect x="350" y="100" width="200" height="100" rx="10" fill="#2d1f1a" stroke="#d4a574" stroke-width="2"/>
+                        <text x="450" y="140" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="16" font-weight="600">Server</text>
+                        <text x="450" y="165" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="12">Django / DRF</text>
+                        <text x="450" y="185" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="12">Business Logic</text>
+                        
+                        <!-- Database -->
+                        <rect x="550" y="100" width="150" height="100" rx="10" fill="#1a1210" stroke="#6b8c42" stroke-width="2"/>
+                        <text x="625" y="145" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="14" font-weight="600">Database</text>
+                        <text x="625" y="170" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="12">PostgreSQL</text>
+                        
+                        <!-- Arrows between Server and DB -->
+                        <line x1="550" y1="135" x2="580" y2="135" stroke="#6b8c42" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+                        <line x1="580" y1="165" x2="550" y2="165" stroke="#6b8c42" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+                        
+                        <!-- Arrow Left (Response) -->
+                        <line x1="350" y1="170" x2="250" y2="170" stroke="#6b8c42" stroke-width="3" marker-end="url(#arrowhead-green)"/>
+                        <text x="300" y="195" text-anchor="middle" fill="#6b8c42" font-family="Inter" font-size="11">HTTP Response</text>
+                        <text x="300" y="210" text-anchor="middle" fill="#8b7355" font-family="Inter" font-size="10">{"id": 67890, ...}</text>
+                        
+                        <!-- Arrow markers -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#cd853f"/>
+                            </marker>
+                            <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#6b8c42"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <h3>Stateless Protocol Explained</h3>
+                <p>HTTP is <strong>stateless</strong>, which means:</p>
+                <blockquote style="border-left: 3px solid var(--accent-gold); padding-left: 1rem; margin: 1rem 0; font-style: italic; color: var(--text-primary);">
+                    Each request is independent. The server doesn't remember previous requests unless you explicitly make it remember.
+                </blockquote>
+
+                <div class="callout callout-anime">
+                    <div class="callout-title">📺 Anime Analogy: Hunter x Hunter Nen Ability</div>
+                    <p>Imagine every HTTP request is like Gon using Jajanken. Each time he fires it, he has to <strong>charge it from scratch</strong>. The attack doesn't "remember" the previous one.</p>
+                    <p>If Gon wants to do a combo attack, he has to <em>explicitly</em> set it up each time. Similarly, if you want the server to "remember" a user across requests, you need <strong>sessions or tokens</strong>—which we'll cover in Phase 3.</p>
+                    <p><strong>Why stateless?</strong> Scalability. Any server can handle any request. You can add 100 servers behind a load balancer, and they all work identically because no server holds special "state" about a user.</p>
+                </div>
+
+                <p><strong>But wait</strong>—if HTTP is stateless, how do logins work? How does the server know you're you on page 2? Answer: <strong>Cookies and Tokens</strong>. These are mechanisms to pass identity information with <em>every</em> request, making each request self-contained.</p>
+            </section>
+
+            <!-- REST & APIs -->
+            <section id="rest-api">
+                <h2>What REST Means (And What People Get Wrong)</h2>
+
+                <p><strong>REST</strong> stands for <strong>Representational State Transfer</strong>. It's an architectural style (not a protocol, not a standard) defined by Roy Fielding in his 2000 PhD thesis.</p>
+
+                <h3>The 6 REST Constraints</h3>
+                <p>For an API to be truly RESTful, it must follow these rules:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Constraint</th>
+                            <th>What It Means</th>
+                            <th>Why It Matters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Client-Server</strong></td>
+                            <td>Separation of concerns: UI logic on client, data logic on server</td>
+                            <td>Independent evolution, scalability</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stateless</strong></td>
+                            <td>Server stores no client context between requests</td>
+                            <td>Reliability, visibility, scalability</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cacheable</strong></td>
+                            <td>Responses must define themselves as cacheable or not</td>
+                            <td>Performance, reduced server load</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uniform Interface</strong></td>
+                            <td>Resources identified in URLs, manipulated via representations</td>
+                            <td>Simplicity, decoupling</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Layered System</strong></td>
+                            <td>Client can't tell if connected directly or through intermediaries</td>
+                            <td>Load balancing, security layers, proxies</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Code on Demand</strong></td>
+                            <td>Servers can send executable code (optional)</td>
+                            <td>Reduced client complexity (rarely used)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="callout callout-warning">
+                    <div class="callout-title">⚠️ What People Get Wrong About REST</div>
+                    <p><strong>Myth:</strong> "Any JSON API is RESTful."</p>
+                    <p><strong>Reality:</strong> Most "REST APIs" are just <strong>HTTP + JSON</strong>. True REST requires:</p>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Resources identified by URLs (<code>/loans/123</code>, not <code>/getLoan?id=123</code>)</li>
+                        <li>Standard HTTP methods (GET/POST/PUT/DELETE)</li>
+                        <li>HATEOAS (Hypermedia as the Engine of Application State)—responses include links to related actions</li>
+                    </ul>
+                    <p><strong>Honest truth:</strong> Even DRF doesn't enforce HATEOAS by default. Most production APIs are "REST-like" (resource-oriented HTTP APIs). That's fine. Focus on good design, not religious purity.</p>
+                </div>
+
+                <h3>Resource-Oriented Design</h3>
+                <p>In REST, everything is a <strong>resource</strong> identified by a URL:</p>
+
+                <pre><code># Good RESTful design
+GET    /api/v1/loans/           # List loans
+POST   /api/v1/loans/           # Create loan
+GET    /api/v1/loans/123/       # Get loan 123
+PUT    /api/v1/loans/123/       # Replace loan 123
+PATCH  /api/v1/loans/123/       # Update loan 123
+DELETE /api/v1/loans/123/       # Delete loan 123
+
+# Nested resources
+GET    /api/v1/loans/123/repayments/     # List repayments for loan 123
+POST   /api/v1/loans/123/repayments/     # Create repayment for loan 123</code></pre>
+
+                <p><strong>Bad (non-RESTful) design:</strong></p>
+                <pre><code>GET /api/v1/getLoans?user_id=123
+POST /api/v1/createLoan
+GET /api/v1/deleteLoan?id=123</code></pre>
+
+                <p>See the problem? Verbs in URLs, inconsistent methods, no resource hierarchy. This is RPC over HTTP, not REST.</p>
+            </section>
+
+            <!-- JSON & Serialization -->
+            <section id="json-serialization">
+                <h2>JSON, Serialization, and Why APIs Exist</h2>
+
+                <h3>What is JSON?</h3>
+                <p><strong>JSON (JavaScript Object Notation)</strong> is a text format for representing structured data. It's language-independent but uses JavaScript-like syntax.</p>
+
+                <pre><code class="language-json">{
+    "id": 67890,
+    "borrower": {
+        "id": 12345,
+        "email": "banana.man@example.ng",
+        "verified": true
+    },
+    "amount": 500000,
+    "currency": "NGN",
+    "status": "pending_approval",
+    "repayments": [
+        {"due_date": "2024-02-15", "amount": 25000},
+        {"due_date": "2024-03-15", "amount": 25000}
+    ],
+    "metadata": null
+}</code></pre>
+
+                <h3>Serialization Explained</h3>
+                <p><strong>Serialization</strong> = Converting complex objects (like Django models) into a format that can be transmitted (JSON).</p>
+                <p><strong>Deserialization</strong> = Converting received JSON back into complex objects.</p>
+
+                <div class="callout callout-hood">
+                    <div class="callout-title">⚙️ Under the Hood: Why Can't We Just Send Models?</div>
+                    <p>Django model instances are Python objects with methods, database connections, and circular references. You can't just "send" them over HTTP.</p>
+                    <p><strong>Problem 1:</strong> HTTP only transmits text (bytes). Python objects aren't text.</p>
+                    <p><strong>Problem 2:</strong> Even if you pickle (serialize) the object, the receiving end needs the exact same Python classes. A mobile app written in Swift can't unpickle Python.</p>
+                    <p><strong>Solution:</strong> Convert to a universal format (JSON) that <em>any</em> language can parse. That's what DRF serializers do—they're translation layers between Python objects and JSON.</p>
+                </div>
+
+                <h3>Simple Serialization Example</h3>
+                <pre><code class="language-python"># Django model instance
+loan = Loan.objects.get(id=67890)
+
+# Manual serialization (DON'T do this in production)
+import json
+data = {
+    "id": loan.id,
+    "amount": str(loan.amount),  # Decimal → string
+    "status": loan.status,
+    "created_at": loan.created_at.isoformat()  # datetime → string
+}
+json_string = json.dumps(data)  # Python dict → JSON string
+
+# Deserialization
+received_json = '{"amount": "500000", "status": "approved"}'
+data = json.loads(received_json)  # JSON string → Python dict</code></pre>
+
+                <p><strong>DRF automates this</strong> with Serializers (covered in Module 2.2), but you need to understand what's happening under the hood.</p>
+
+                <h3>Why APIs Exist</h3>
+                <p>An <strong>API (Application Programming Interface)</strong> is a contract between services. It says:</p>
+                <blockquote style="border-left: 3px solid var(--accent-gold); padding-left: 1rem; margin: 1rem 0;">
+                    "If you send me data in this format, I promise to process it and respond in this format."
+                </blockquote>
+
+                <p><strong>Real-world example:</strong> Your fintech app needs to verify a customer's bank account. You don't have direct database access to their bank. Instead:</p>
+                <ol>
+                    <li>You send a POST request to the bank's API with account details</li>
+                    <li>The bank validates and responds with account holder name</li>
+                    <li>Your app displays the name for confirmation</li>
+                </ol>
+
+                <p><strong>Without APIs:</strong> Every integration would require custom database connections, shared credentials, and tight coupling. APIs enable <strong>loose coupling</strong>—services evolve independently.</p>
+            </section>
+
+            <!-- Request Lifecycle -->
+            <section id="request-lifecycle">
+                <h2>What Happens From URL to Response</h2>
+
+                <p>Let's trace a complete request. You type <code>https://fintech-api.example.com/api/v1/loans/123/</code> into your browser (or Postman). Here's what happens:</p>
+
+                <div class="diagram-container">
+                    <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Browser -->
+                        <rect x="50" y="20" width="150" height="60" rx="8" fill="#3d2a22" stroke="#d4a574" stroke-width="2"/>
+                        <text x="125" y="45" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="13" font-weight="600">Browser /</text>
+                        <text x="125" y="65" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="13" font-weight="600">API Client</text>
+                        
+                        <!-- DNS -->
+                        <rect x="250" y="20" width="120" height="60" rx="8" fill="#2d1f1a" stroke="#4a90a4" stroke-width="2"/>
+                        <text x="310" y="50" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="13" font-weight="600">DNS Server</text>
+                        
+                        <!-- Load Balancer -->
+                        <rect x="420" y="20" width="140" height="60" rx="8" fill="#1a1210" stroke="#cd853f" stroke-width="2"/>
+                        <text x="490" y="45" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="13" font-weight="600">Load Balancer</text>
+                        <text x="490" y="65" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="11">(Nginx / ALB)</text>
+                        
+                        <!-- Django App Servers -->
+                        <rect x="620" y="10" width="120" height="80" rx="8" fill="#2d1f1a" stroke="#6b8c42" stroke-width="2"/>
+                        <text x="680" y="40" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="12" font-weight="600">Django App</text>
+                        <text x="680" y="60" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="11">Server 1</text>
+                        
+                        <rect x="620" y="100" width="120" height="80" rx="8" fill="#2d1f1a" stroke="#6b8c42" stroke-width="2"/>
+                        <text x="680" y="130" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="12" font-weight="600">Django App</text>
+                        <text x="680" y="150" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="11">Server 2</text>
+                        
+                        <!-- Database -->
+                        <rect x="800" y="60" width="90" height="110" rx="8" fill="#1a1210" stroke="#6b8c42" stroke-width="2"/>
+                        <text x="845" y="105" text-anchor="middle" fill="#f5e6d3" font-family="Inter" font-size="12" font-weight="600">PostgreSQL</text>
+                        <text x="845" y="125" text-anchor="middle" fill="#c9a88c" font-family="Inter" font-size="10">Database</text>
+                        
+                        <!-- Arrows with step numbers -->
+                        <!-- Step 1: DNS Lookup -->
+                        <path d="M200 50 L240 50" stroke="#cd853f" stroke-width="2" marker-end="url(#arrow-orange)"/>
+                        <text x="220" y="40" text-anchor="middle" fill="#cd853f" font-family="Inter" font-size="10">1. DNS</text>
+                        
+                        <!-- Step 2: To Load Balancer -->
+                        <path d="M370 50 L410 50" stroke="#cd853f" stroke-width="2" marker-end="url(#arrow-orange)"/>
+                        <text x="390" y="40" text-anchor="middle" fill="#cd853f" font-family="Inter" font-size="10">2. TCP</text>
+                        
+                        <!-- Step 3: To App Server -->
+                        <path d="M560 50 L610 30" stroke="#cd853f" stroke-width="2" marker-end="url(#arrow-orange)"/>
+                        <text x="585" y="40" text-anchor="middle" fill="#cd853f" font-family="Inter" font-size="10">3. Route</text>
+                        
+                        <!-- Step 4: To Database -->
+                        <path d="M740 50 L790 90" stroke="#6b8c42" stroke-width="2" marker-end="url(#arrow-green)"/>
+                        <text x="765" y="60" text-anchor="middle" fill="#6b8c42" font-family="Inter" font-size="10">4. Query</text>
+                        
+                        <!-- Step 5: Response back -->
+                        <path d="M790 130 L740 150" stroke="#6b8c42" stroke-width="2" marker-end="url(#arrow-green)"/>
+                        <text x="765" y="155" text-anchor="middle" fill="#6b8c42" font-family="Inter" font-size="10">5. Data</text>
+                        
+                        <!-- Step 6: Response to client -->
+                        <path d="M610 160 L560 180 L370 180" stroke="#cd853f" stroke-width="2" marker-end="url(#arrow-orange)" fill="none"/>
+                        <text x="490" y="195" text-anchor="middle" fill="#cd853f" font-family="Inter" font-size="10">6. HTTP Response</text>
+                        
+                        <defs>
+                            <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#cd853f"/>
+                            </marker>
+                            <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#6b8c42"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <h3>Step-by-Step Breakdown</h3>
+
+                <ol style="padding-left: 1.5rem;">
+                    <li style="margin-bottom: 1rem;">
+                        <strong>DNS Resolution:</strong> Your computer asks a DNS server: "What IP address is <code>fintech-api.example.com</code>?" DNS responds: <code>104.26.10.123</code>.
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>TCP Connection:</strong> Your browser establishes a TCP connection to that IP (three-way handshake: SYN, SYN-ACK, ACK). If HTTPS, TLS negotiation happens here.
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>HTTP Request Sent:</strong> Your browser sends the HTTP request we saw earlier.
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Load Balancer:</strong> Receives the request, checks SSL termination, applies rate limiting, and forwards to an available Django server (round-robin or least-connections).
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Django Request Processing:</strong>
+                        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                            <li>WSGI/ASGI handler receives the request</li>
+                            <li>Middleware stack processes it (authentication, CORS, sessions)</li>
+                            <li>URL resolver matches <code>/api/v1/loans/123/</code> to a view function</li>
+                            <li>View executes: queries database, runs business logic</li>
+                            <li>ORM generates SQL: <code>SELECT * FROM loans WHERE id = 123;</code></li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Database Query:</strong> PostgreSQL executes the query and returns the row(s).
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Serialization:</strong> Django converts the model instance to JSON via DRF serializers.
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Response Built:</strong> Django wraps JSON in an HttpResponse with status code and headers.
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <strong>Response Travels Back:</strong> Through middleware (again), through load balancer, over TCP, to your browser.
+                    </li>
+                    <li>
+                        <strong>Browser Renders:</strong> Your browser (or API client) parses the JSON and updates the UI.
+                    </li>
+                </ol>
+
+                <div class="callout callout-key">
+                    <div class="callout-title">💡 Key Idea: Middleware Runs Twice</div>
+                    <p>Middleware processes requests <strong>before</strong> they reach the view, and responses <strong>after</strong> the view returns. Think of it as a layered onion:</p>
+                    <pre style="margin-top: 0.5rem;"><code>Request:  Middleware 1 → Middleware 2 → View
+Response: View → Middleware 2 → Middleware 1 → Client</code></pre>
+                    <p>This is crucial for things like authentication (check on request in) and logging (log on response out).</p>
+                </div>
+
+                <p><strong>Total time:</strong> For a simple API call, this entire journey might take 50-200ms. Most of that is network latency, not Django processing.</p>
+            </section>
+
+            <!-- Exercises -->
+            <section id="exercises" class="exercise-section">
+                <h2>🏋️ Practice Exercises</h2>
+                <p style="margin-bottom: 2rem;">Attempt these before looking at the solutions. Struggle is where learning happens.</p>
+
+                <!-- Warm-up Exercises -->
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-warmup">Warm-up</span>
+                    <h4>Exercise 1: HTTP Method Matching</h4>
+                    <p>Match each operation to the correct HTTP method:</p>
+                    <ol style="padding-left: 1.5rem; margin-top: 1rem;">
+                        <li>Retrieve a list of all loans for a borrower</li>
+                        <li>Create a new loan application</li>
+                        <li>Update just the interest rate on an existing loan</li>
+                        <li>Completely replace a borrower's profile information</li>
+                        <li>Delete a cancelled loan record</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><strong>Expected output:</strong> Write your answers as: 1-GET, 2-POST, etc.</p>
+                </div>
+
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-warmup">Warm-up</span>
+                    <h4>Exercise 2: Status Code Detective</h4>
+                    <p>What HTTP status code should the server return in each scenario?</p>
+                    <ol style="padding-left: 1.5rem; margin-top: 1rem;">
+                        <li>User successfully creates a new expense record</li>
+                        <li>User tries to access another user's wallet without permission</li>
+                        <li>User sends a loan application with missing required fields</li>
+                        <li>User requests a loan ID that doesn't exist</li>
+                        <li>User makes 100 API calls in 1 minute (exceeds rate limit)</li>
+                    </ol>
+                </div>
+
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-warmup">Warm-up</span>
+                    <h4>Exercise 3: RESTful URL Design</h4>
+                    <p>Design RESTful URLs for these operations in a multi-tenant POS system:</p>
+                    <ol style="padding-left: 1.5rem; margin-top: 1rem;">
+                        <li>List all products for shop #456</li>
+                        <li>Create a new sale transaction for shop #456</li>
+                        <li>Get details of sale #789 in shop #456</li>
+                        <li>Update the quantity of product #123 in shop #456</li>
+                        <li>Delete a discontinued product #999 from shop #456</li>
+                    </ol>
+                </div>
+
+                <!-- Build Exercises -->
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-build">Build</span>
+                    <h4>Exercise 4: Trace a Loan Repayment Request</h4>
+                    <p><strong>Scenario:</strong> A user makes a loan repayment via your API.</p>
+                    <p><strong>Request:</strong></p>
+                    <pre><code>POST /api/v1/loans/12345/repayments/
+{
+    "amount": 25000,
+    "payment_method": "card",
+    "card_last_four": "4242"
+}</code></pre>
+
+                    <p><strong>Task:</strong> Write out the complete journey step-by-step (10-15 steps minimum). Include:</p>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>DNS and network layer</li>
+                        <li>Load balancer routing</li>
+                        <li>Django middleware (name at least 3 types)</li>
+                        <li>URL resolution</li>
+                        <li>Database queries (what SQL might run?)</li>
+                        <li>Response construction</li>
+                    </ul>
+                    <p style="margin-top: 1rem;"><strong>Deliverable:</strong> A numbered list with explanations for each step.</p>
+                </div>
+
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-build">Build</span>
+                    <h4>Exercise 5: JSON Serialization Practice</h4>
+                    <p><strong>Given this Python data structure:</strong></p>
+                    <pre><code class="language-python">from decimal import Decimal
+from datetime import datetime
+
+expense_data = {
+    "id": 42,
+    "user_id": 7,
+    "category": "transport",
+    "amount": Decimal("15000.50"),
+    "description": "Fuel for generator",
+    "created_at": datetime(2024, 1, 15, 14, 30, 0),
+    "tags": ["business", "urgent"],
+    "receipt_image": None
+}</code></pre>
+
+                    <p><strong>Task:</strong></p>
+                    <ol style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Manually convert this to a JSON-serializable dictionary (handle Decimal and datetime)</li>
+                        <li>Use <code>json.dumps()</code> to serialize it to a JSON string</li>
+                        <li>Write the exact JSON string output</li>
+                        <li>Now deserialize it back using <code>json.loads()</code> and note what types you get back (hint: Decimal won't survive)</li>
+                    </ol>
+                </div>
+
+                <!-- Debug Exercise -->
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-debug">Debug</span>
+                    <h4>Exercise 6: Find the REST Violations</h4>
+                    <p><strong>This API documentation has multiple REST design problems. Find at least 5:</strong></p>
+                    <pre><code># Expense Tracker API Endpoints
+
+GET /api/getExpenses?userId=123
+POST /api/createExpense
+GET /api/updateExpense?id=456&amount=5000
+POST /api/deleteExpense
+    Body: {"expenseId": 456}
+GET /api/expenses/456/userData/  # Get user info for expense
+POST /api/processRefund/
+    Body: {"transactionId": "tx_123", "reason": "duplicate"}</code></pre>
+
+                    <p><strong>Task:</strong> For each violation:</p>
+                    <ol style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Identify what's wrong</li>
+                        <li>Explain WHY it violates REST principles</li>
+                        <li>Rewrite it correctly</li>
+                    </ol>
+                </div>
+
+                <!-- Challenge Exercise -->
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-challenge">Challenge</span>
+                    <h4>Exercise 7: Design an Idempotent Payment Endpoint</h4>
+                    <p><strong>Context:</strong> In fintech, payment requests can be duplicated (network retries, user double-clicks). You need to prevent double-charging.</p>
+                    
+                    <p><strong>Requirements:</strong></p>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Client sends a unique <code>idempotency_key</code> with each payment request</li>
+                        <li>If the same key is sent twice with the same data, return the original response (don't charge again)</li>
+                        <li>If the same key is sent with different data, return an error</li>
+                        <li>After 24 hours, idempotency keys expire (allow retry)</li>
+                    </ul>
+
+                    <p><strong>Task:</strong> Design the API:</p>
+                    <ol style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>What HTTP method and URL?</li>
+                        <li>What does the request body look like?</li>
+                        <li>Where should <code>idempotency_key</code> go (header vs body)? Justify your choice.</li>
+                        <li>What status codes for each scenario (first request, duplicate, conflict, expired)?</li>
+                        <li>Sketch the database schema for storing idempotency keys</li>
+                        <li>Write pseudocode for the view logic</li>
+                    </ol>
+
+                    <p style="margin-top: 1rem;"><strong>This is hard.</strong> Real production systems fail at this. Think through race conditions.</p>
+                </div>
+
+                <!-- Explain It Back -->
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-explain">Explain It Back</span>
+                    <h4>Exercise 8: Teach Statelessness</h4>
+                    <p>Explain HTTP statelessness to a junior developer who keeps asking "But how does the server remember who I am?"</p>
+                    <p><strong>Requirements:</strong></p>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Use an analogy (anime or real-world)</li>
+                        <li>Explain WHY statelessness exists (benefits)</li>
+                        <li>Explain HOW we work around it (sessions/tokens)</li>
+                        <li>Keep it under 200 words</li>
+                    </ul>
+                </div>
+
+                <div class="exercise-card">
+                    <span class="exercise-type exercise-explain">Explain It Back</span>
+                    <h4>Exercise 9: REST vs RPC</h4>
+                    <p>Your teammate wants to build endpoints like <code>/api/calculateLoanInterest</code> and <code>/api/sendVerificationSMS</code>.</p>
+                    <p><strong>Task:</strong> Write a respectful but firm explanation (as if in a code review comment) covering:</p>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Why this approach causes problems long-term</li>
+                        <li>What the RESTful alternative would be</li>
+                        <li>One exception where RPC-style might be acceptable</li>
+                    </ul>
+                </div>
+
+                <!-- Solutions Section -->
+                <button class="solution-toggle" onclick="toggleSolution('solutions')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.3s;">
+                        <path d="M12 15l-1.41-1.41L14.17 10H4V8h10.17l-3.58-3.59L12 3l6 6-6 6z"/>
+                    </svg>
+                    Show Solutions
+                </button>
+
+                <div id="solutions" class="solution-content">
+                    <h3 style="color: var(--success); margin-bottom: 1.5rem;">✅ Exercise Solutions</h3>
+
+                    <h4>Solution 1: HTTP Method Matching</h4>
+                    <pre><code>1-GET (retrieve list, read-only)
+2-POST (create new resource)
+3-PATCH (partial update)
+4-PUT (full replacement)
+5-DELETE (remove resource)</code></pre>
+                    <p><strong>Why:</strong> Each method has semantic meaning. Using them correctly enables caching, makes APIs predictable, and follows REST conventions that DRF expects.</p>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 2: Status Code Detective</h4>
+                    <pre><code>1. 201 Created (resource successfully created)
+2. 403 Forbidden (authenticated but no permission - different from 401!)
+3. 400 Bad Request (validation error, client's fault)
+4. 404 Not Found (resource doesn't exist)
+5. 429 Too Many Requests (rate limiting)</code></pre>
+                    <p><strong>Key distinction:</strong> 401 = "I don't know who you are." 403 = "I know who you are, but you can't do this." DRF handles these differently.</p>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 3: RESTful URL Design</h4>
+                    <pre><code>1. GET  /api/v1/shops/456/products/
+2. POST /api/v1/shops/456/sales/
+3. GET  /api/v1/shops/456/sales/789/
+4. PATCH /api/v1/shops/456/products/123/
+5. DELETE /api/v1/shops/456/products/999/</code></pre>
+                    <p><strong>Note:</strong> Shop ID is part of the URL hierarchy (nested resource). This enforces multi-tenancy at the URL level—you can't accidentally access another shop's data.</p>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 4: Loan Repayment Trace</h4>
+                    <pre><code>1. Browser resolves DNS: fintech-api.example.com → 104.26.10.123
+2. TCP three-way handshake with server
+3. TLS negotiation (HTTPS encryption)
+4. Browser sends HTTP POST request with JSON body
+5. Load balancer receives request, terminates TLS
+6. Load balancer checks rate limit (Redis/Upstash)
+7. Load balancer forwards to Django server #3 (least loaded)
+8. Django WSGI handler receives request
+9. SecurityMiddleware checks HTTPS, CSRF (if applicable)
+10. CorsMiddleware adds CORS headers
+11. AuthenticationMiddleware parses JWT from Authorization header
+12. URLResolver matches /api/v1/loans/12345/repayments/ to RepaymentViewSet.create()
+13. View checks permissions (IsAuthenticated, IsOwner)
+14. Serializer validates amount > 0, payment_method valid
+15. View opens transaction.atomic() block
+16. ORM query: SELECT * FROM loans WHERE id=12345 FOR UPDATE
+17. Business logic: calculate new balance, check for overdraft
+18. ORM: INSERT INTO repayments (...) VALUES (...)
+19. ORM: UPDATE loans SET balance = ... WHERE id = 12345
+20. Transaction committed
+21. Signal triggers: send_receipt_email() (background task)
+22. Serializer converts repayment instance to JSON
+23. DRF builds HttpResponse with status 201 Created
+24. Response passes back through middleware (logging, etc.)
+25. Load balancer adds response headers
+26. HTTP response travels back over TCP/TLS
+27. Browser parses JSON, updates UI with success message</code></pre>
+                    <p><strong>Key learnings:</strong> Notice the database uses <code>FOR UPDATE</code> (row locking) to prevent race conditions. The email is sent asynchronously (doesn't block response). Middleware runs both directions.</p>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 5: JSON Serialization</h4>
+                    <pre><code class="language-python">import json
+from decimal import Decimal
+from datetime import datetime
+
+# Step 1: Make JSON-serializable
+def serialize_expense(data):
+    return {
+        "id": data["id"],
+        "user_id": data["user_id"],
+        "category": data["category"],
+        "amount": str(data["amount"]),  # Decimal → string
+        "description": data["description"],
+        "created_at": data["created_at"].isoformat(),  # datetime → ISO string
+        "tags": data["tags"],
+        "receipt_image": data["receipt_image"]
+    }
+
+serializable = serialize_expense(expense_data)
+
+# Step 2: Serialize to JSON
+json_string = json.dumps(serializable, indent=2)
+
+# Step 3: Exact output
+print(json_string)
+# {
+#   "id": 42,
+#   "user_id": 7,
+#   "category": "transport",
+#   "amount": "15000.50",
+#   "description": "Fuel for generator",
+#   "created_at": "2024-01-15T14:30:00",
+#   "tags": ["business", "urgent"],
+#   "receipt_image": null
+# }
+
+# Step 4: Deserialize
+back_from_json = json.loads(json_string)
+print(type(back_from_json["amount"]))      # <class 'str'> (NOT Decimal!)
+print(type(back_from_json["created_at"]))  # <class 'str'> (NOT datetime!)
+print(type(back_from_json["tags"]))        # <class 'list'>
+</code></pre>
+                    <p><strong>Gotcha:</strong> JSON doesn't have Decimal or datetime types. They become strings. DRF serializers handle this conversion automatically with proper field types (<code>DecimalField</code>, <code>DateTimeField</code>).</p>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 6: REST Violations</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Violation</th>
+                                <th>Why It's Wrong</th>
+                                <th>Correct Version</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/getExpenses</code></td>
+                                <td>Verb in URL, not resource-oriented</td>
+                                <td><code>GET /api/expenses/?user_id=123</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/createExpense</code></td>
+                                <td>Verb in URL, should use POST method</td>
+                                <td><code>POST /api/expenses/</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>GET /updateExpense</code></td>
+                                <td>GET should never modify state; verb in URL</td>
+                                <td><code>PATCH /api/expenses/456/</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>POST /deleteExpense</code></td>
+                                <td>Should use DELETE method, not POST</td>
+                                <td><code>DELETE /api/expenses/456/</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/userData/</code> nested weirdly</td>
+                                <td>Confusing hierarchy; mixing resources</td>
+                                <td><code>GET /api/users/&lt;user_id&gt;/</code> separately</td>
+                            </tr>
+                            <tr>
+                                <td><code>/processRefund</code></td>
+                                <td>Verb in URL; refund should be a resource</td>
+                                <td><code>POST /api/refunds/</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 7: Idempotent Payment Endpoint</h4>
+                    <pre><code># API Design
+POST /api/v1/payments/
+Headers:
+  Idempotency-Key: &lt;uuid-generated-by-client&gt;
+  Content-Type: application/json
+  
+Body:
+{
+    "loan_id": 12345,
+    "amount": 25000,
+    "currency": "NGN",
+    "payment_method": "card",
+    "card_token": "tok_visa_4242"
+}
+
+# Status Codes
+- 201 Created: First successful request
+- 200 OK: Duplicate request with same key + same data (return cached response)
+- 409 Conflict: Same key but different data (potential fraud/bug)
+- 410 Gone: Key expired after 24 hours (client should retry with new key)
+
+# Database Schema
+CREATE TABLE idempotency_keys (
+    key VARCHAR(255) PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL,
+    request_hash CHAR(64) NOT NULL,  -- SHA256 of request body
+    response_body JSONB NOT NULL,    -- Cache the full response
+    status_code INTEGER NOT NULL
+);
+CREATE INDEX idx_expires ON idempotency_keys(expires_at);
+
+# Pseudocode
+def create_payment(request):
+    idempotency_key = request.headers.get('Idempotency-Key')
+    if not idempotency_key:
+        return 400, {"error": "Idempotency-Key header required"}
+    
+    request_hash = sha256(request.body)
+    
+    with transaction.atomic():
+        # Try to get existing key (FOR UPDATE to prevent race)
+        try:
+            cached = IdempotencyKey.objects.select_for_update().get(key=idempotency_key)
+            
+            if cached.expires_at < now():
+                return 410, {"error": "Idempotency key expired"}
+            
+            if cached.request_hash != request_hash:
+                return 409, {"error": "Key reused with different data"}
+            
+            # Return cached response
+            return cached.status_code, cached.response_body
+            
+        except IdempotencyKey.DoesNotExist:
+            # First time seeing this key - process payment
+            response_status, response_body = process_payment_logic(request)
+            
+            # Save for future duplicates
+            IdempotencyKey.objects.create(
+                key=idempotency_key,
+                expires_at=now() + timedelta(hours=24),
+                request_hash=request_hash,
+                response_body=response_body,
+                status_code=response_status
+            )
+            
+            return response_status, response_body</code></pre>
+                    <p><strong>Trade-offs discussed:</strong></p>
+                    <ul>
+                        <li><strong>Header vs body:</strong> Header is better—can check idempotency before parsing body, works even if body parsing fails.</li>
+                        <li><strong>Row locking:</strong> <code>SELECT FOR UPDATE</code> prevents two simultaneous requests with same key from both inserting.</li>
+                        <li><strong>Hash comparison:</strong> Prevents malicious reuse with different amounts.</li>
+                        <li><strong>Expiration:</strong> Prevents table bloat; 24h is typical but depends on business needs.</li>
+                    </ul>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 8: Teach Statelessness (Sample)</h4>
+                    <pre><code>Think of HTTP like a vending machine. Every time you press a button 
+(request), the machine processes it fresh. It doesn't remember you 
+bought a soda 5 minutes ago.
+
+Why? Imagine 100 vending machines (servers) at a stadium. If each 
+remembered different customers, you'd have to use the SAME machine 
+every time. Statelessness means ANY machine can handle ANY request.
+
+"But how do logins work?" Great question! We attach a "membership 
+card" (session token/JWT) to EVERY request. Like showing your ID at 
+each checkpoint in World Trigger. The server doesn't remember you—
+you prove who you are every single time.
+
+That's stateless: no memory between requests, but full context WITH 
+each request.</code></pre>
+
+                    <hr style="border: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+                    <h4>Solution 9: REST vs RPC (Sample Code Review)</h4>
+                    <pre><code>@teammate Nice thinking on separating these operations! However, I'd 
+suggest we make these resource-oriented instead of action-oriented.
+
+Current approach problems:
+- Hard to cache (all POST requests bypass caches by default)
+- Discoverability suffers (can't guess URLs)
+- Mixes concerns (calculation vs resource representation)
+- Breaks DRF's generic view patterns
+
+RESTful alternatives:
+- `/api/loans/{id}/` with `amount` and `term` → server calculates 
+  interest automatically and returns it in the response
+- `/api/verifications/sms/` POST to create a verification resource; 
+  the act of creation triggers SMS sending
+
+Exception where RPC-style is okay:
+- Truly procedural operations with no clear resource model, like 
+  `/api/admin/clear-cache/` or `/api/webhooks/test-delivery/`. But 
+  even then, consider if it could be a resource (CacheClearRequest?).
+
+Thoughts? Happy to pair on refactoring!</code></pre>
+                </div>
+            </section>
+
+            <!-- Module Footer -->
+            <footer id="recap" class="module-footer">
+                <h2>📚 Module Recap</h2>
+                
+                <div class="footer-grid">
+                    <div class="footer-card">
+                        <h4>Key Concepts</h4>
+                        <ul>
+                            <li>HTTP request/response anatomy</li>
+                            <li>Stateless client-server model</li>
+                            <li>REST constraints and principles</li>
+                            <li>JSON serialization/deserialization</li>
+                            <li>Complete request lifecycle</li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-card">
+                        <h4>You Should Now Be Able To</h4>
+                        <ul>
+                            <li>Read raw HTTP requests and responses</li>
+                            <li>Choose correct HTTP methods</li>
+                            <li>Design RESTful URL structures</li>
+                            <li>Explain statelessness and workarounds</li>
+                            <li>Trace a request through all layers</li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-card">
+                        <h4>Cheat Sheet: HTTP Status Codes</h4>
+                        <ul>
+                            <li>200 = Success (GET/PATCH)</li>
+                            <li>201 = Created (POST)</li>
+                            <li>204 = No Content (DELETE)</li>
+                            <li>400 = Bad Request (validation)</li>
+                            <li>401 = Unauthorized (no login)</li>
+                            <li>403 = Forbidden (no permission)</li>
+                            <li>404 = Not Found</li>
+                            <li>429 = Rate Limited</li>
+                            <li>500 = Server Error</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="next-module-preview">
+                    <h4>➡️ Next: Module 0.2 - Python Essentials for Django</h4>
+                    <p>We'll cover virtual environments, advanced Python concepts (decorators, context managers, generators), type hints, and environment variables. These are the tools Django uses constantly—you need them sharp before touching Django code.</p>
+                </div>
+
+                <div class="checkin-section">
+                    <h4>🤔 Check-In Before Moving On</h4>
+                    <p>Banana man, before we proceed to Module 0.2:</p>
+                    <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Did any concept feel fuzzy? (HTTP methods, statelessness, REST constraints, serialization?)</li>
+                        <li>Do you want me to go deeper on any topic?</li>
+                        <li>How did the exercises feel? Too easy, too hard, just right?</li>
+                    </ul>
+                    <p style="margin-top: 1rem;"><strong>Reply with your feedback</strong>, or say <strong>"next"</strong> if you're ready to continue.</p>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Initialize highlight.js
+        hljs.highlightAll();
+
+        // Smooth scroll to section
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+        }
+
+        // Toggle solution visibility
+        function toggleSolution(solutionId) {
+            const content = document.getElementById(solutionId);
+            const button = event.currentTarget;
+            
+            content.classList.toggle('visible');
+            button.classList.toggle('active');
+            
+            if (content.classList.contains('visible')) {
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(180deg); transition: transform 0.3s;">
+                        <path d="M12 15l-1.41-1.41L14.17 10H4V8h10.17l-3.58-3.59L12 3l6 6-6 6z"/>
+                    </svg>
+                    Hide Solutions
+                `;
+            } else {
+                button.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="transition: transform 0.3s;">
+                        <path d="M12 15l-1.41-1.41L14.17 10H4V8h10.17l-3.58-3.59L12 3l6 6-6 6z"/>
+                    </svg>
+                    Show Solutions
+                `;
+            }
+        }
+
+        // Copy code button functionality
+        document.querySelectorAll('pre').forEach(pre => {
+            const button = document.createElement('button');
+            button.className = 'copy-btn';
+            button.textContent = 'Copy';
+            pre.appendChild(button);
+            
+            button.addEventListener('click', async () => {
+                const code = pre.querySelector('code').textContent;
+                await navigator.clipboard.writeText(code);
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+
+        // Progress tracking with localStorage
+        const progressKey = 'django-course-progress-0.1';
+        let progress = JSON.parse(localStorage.getItem(progressKey)) || {
+            sectionsCompleted: [],
+            exercisesCompleted: [],
+            overallPercent: 0
+        };
+
+        function updateProgress() {
+            const totalSections = 8; // Number of main sections
+            const completedCount = progress.sectionsCompleted.length;
+            const percent = Math.round((completedCount / totalSections) * 100);
+            
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('progress-percent').textContent = percent + '%';
+            
+            localStorage.setItem(progressKey, JSON.stringify(progress));
+        }
+
+        // Track section completion via checkboxes (future enhancement)
+        function toggleSectionCompletion(sectionId) {
+            const index = progress.sectionsCompleted.indexOf(sectionId);
+            if (index > -1) {
+                progress.sectionsCompleted.splice(index, 1);
+            } else {
+                progress.sectionsCompleted.push(sectionId);
+            }
+            updateProgress();
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside (mobile)
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !menuBtn.contains(e.target) &&
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Initialize progress on load
+        updateProgress();
+
+        // Scroll spy - highlight current section in sidebar
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPosition = window.scrollY + 100;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('onclick').includes(sectionId)) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
