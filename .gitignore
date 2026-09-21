@@ -6,3 +6,4 @@ module_*.html
 dist/
 build/
 *.log
+node_modules/
